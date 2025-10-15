@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Forza stile viola per bottoni thirdweb */
+.tw-connect-wallet {
+  background-color: #4f46e5 !important;
+  color: white !important;
+  border: none !important;
+}
+
+.tw-connect-wallet:hover {
+  background-color: #4338ca !important;
+}
