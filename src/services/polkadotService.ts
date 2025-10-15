@@ -90,8 +90,33 @@ export class PolkadotService {
     }
 
     try {
-      // Add account from private key
-      const account = this.keyring.addFromUri(privateKey);
+      // Validate private key format
+      if (!privateKey || privateKey.trim() === '') {
+        throw new Error('Private key is required but not provided. Please configure VITE_POLKADOT_PRIVATE_KEY in your environment variables.');
+      }
+
+      // Add account from private key (supports mnemonic seed phrase)
+      let account;
+      try {
+        // For mnemonic seed phrases, we need to use the mnemonic directly
+        if (privateKey.split(' ').length === 12) {
+          // It's a mnemonic seed phrase
+          account = this.keyring.addFromMnemonic(privateKey);
+        } else if (privateKey.startsWith('0x')) {
+          // It's a hex private key
+          account = this.keyring.addFromUri(privateKey);
+        } else {
+          // Try as URI (for other formats)
+          account = this.keyring.addFromUri(privateKey);
+        }
+      } catch (keyError) {
+        throw new Error(`Invalid private key format. Please ensure your private key is either:
+        1. A 12-word mnemonic seed phrase
+        2. A hex private key starting with '0x'
+        3. A valid URI format
+        
+        Error: ${keyError.message}`);
+      }
       
       // Get account info
       const { nonce } = await this.api.query.system.account(account.address);
