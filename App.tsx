@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+// Updated: Migration to NeuroWeb SDK and Polkadot blockchain
 import { AuthProvider } from './src/contexts/AuthContext';
 import Header from './components/Header';
 import Hero from './components/Hero';
