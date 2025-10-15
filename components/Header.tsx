@@ -1,13 +1,15 @@
-
 import React, { useEffect, useState } from 'react';
 import { ChainIcon } from './icons/ChainIcon';
-import { Link, useLocation } from 'react-router-dom';
-import AuthButton from './AuthButton';
-import { useActiveAccount } from 'thirdweb/react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../src/contexts/AuthContext';
+import { User, LogOut, Settings, Shield } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isActiveCompany, setIsActiveCompany] = useState<boolean>(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { user, company, isAdmin, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const baseLinks = [
     { name: 'Ricarica', href: '/ricaricacrediti' },
@@ -15,30 +17,21 @@ const Header: React.FC = () => {
     { name: 'Contatti', href: '/contatti' },
   ];
 
-  const account = useActiveAccount();
-  const location = useLocation();
-  const includeMetamask = location.pathname === '/sfyadmin';
-  const disableAA = location.pathname === '/sfyadmin';
-
-  useEffect(() => {
-    const checkActive = async () => {
-      try {
-        if (!account?.address) {
-          setIsActiveCompany(false);
-          return;
-        }
-        const r = await fetch(`/api/get-company-status?walletAddress=${account.address}`);
-        if (!r.ok) { setIsActiveCompany(false); return; }
-        const j = await r.json().catch(() => ({}));
-        setIsActiveCompany(Boolean(j?.isActive));
-      } catch { setIsActiveCompany(false); }
-    };
-    checkActive();
-  }, [account?.address]);
-
-  const navLinks = isActiveCompany
+  const navLinks = company?.isActive
     ? [...baseLinks, { name: 'Dashboard', href: '/dashboard' }]
     : baseLinks;
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+    setIsDropdownOpen(false);
+  };
+
+  const handleAdminClick = () => {
+    navigate('/sfyadmin');
+    setIsDropdownOpen(false);
+  };
+
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,60 +44,131 @@ const Header: React.FC = () => {
             </Link>
           </div>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex md:space-x-8">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
-              <Link key={link.name} to={link.href} className="text-base font-medium text-slate-600 hover:text-primary transition-colors">
+              <Link
+                key={link.name}
+                to={link.href}
+                className="text-slate-600 hover:text-slate-900 font-medium transition-colors"
+              >
                 {link.name}
               </Link>
             ))}
           </nav>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <AuthButton label="Accedi" includeMetamask={includeMetamask} disableAA={disableAA} />
-          </div>
+          {/* User Menu */}
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center space-x-2 text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <span className="hidden sm:block font-medium">
+                    {company?.nome || user.email}
+                  </span>
+                </button>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">{company?.nome}</p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
+                      {company?.crediti !== undefined && (
+                        <p className="text-xs text-blue-600">Crediti: {company.crediti}</p>
+                      )}
+                    </div>
+                    
+                    {isAdmin && (
+                      <button
+                        onClick={handleAdminClick}
+                        className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                      >
+                        <Shield className="h-4 w-4 mr-2" />
+                        Admin Panel
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link
+                  to="/login"
+                  className="text-slate-600 hover:text-slate-900 font-medium transition-colors"
+                >
+                  Accedi
+                </Link>
+                <Link
+                  to="/login"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Registrati
+                </Link>
+              </div>
+            )}
+
+            {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-slate-500 hover:text-primary hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+              className="md:hidden p-2 text-slate-600 hover:text-slate-900"
             >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
-                </svg>
-              )}
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navLinks.map((link) => (
-              <Link key={link.name} to={link.href} className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-primary hover:bg-slate-100">
-                {link.name}
-              </Link>
-            ))}
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t border-slate-200 py-4">
+            <nav className="flex flex-col space-y-4">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className="text-slate-600 hover:text-slate-900 font-medium transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.name}
+                </Link>
+              ))}
+              
+              {!user && (
+                <div className="flex flex-col space-y-2 pt-4 border-t border-slate-200">
+                  <Link
+                    to="/login"
+                    className="text-slate-600 hover:text-slate-900 font-medium transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Accedi
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium text-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Registrati
+                  </Link>
+                </div>
+              )}
+            </nav>
           </div>
-          <div className="pt-4 pb-3 border-t border-slate-200">
-            <div className="px-2">
-               <div className="px-2">
-                 <AuthButton label="Accedi" includeMetamask={includeMetamask} disableAA={disableAA} className="w-full justify-center" />
-               </div>
-            </div>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </header>
   );
 };
