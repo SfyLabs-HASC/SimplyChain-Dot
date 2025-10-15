@@ -47,6 +47,40 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Utenti di test hardcoded per sviluppo
+const TEST_USERS = {
+  admin: {
+    email: 'sfy.startup@gmail.com',
+    password: '1234',
+    company: {
+      id: 'admin-test-id',
+      email: 'sfy.startup@gmail.com',
+      nome: 'SFY Admin',
+      settore: 'admin',
+      isActive: true,
+      pending: false,
+      crediti: 999,
+      createdAt: new Date(),
+      activatedAt: new Date()
+    }
+  },
+  user: {
+    email: 'pianopkeys@gmail.com',
+    password: '1234',
+    company: {
+      id: 'user-test-id',
+      email: 'pianopkeys@gmail.com',
+      nome: 'Piano Keys',
+      settore: 'musica',
+      isActive: true,
+      pending: false,
+      crediti: 100,
+      createdAt: new Date(),
+      activatedAt: new Date()
+    }
+  }
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [company, setCompany] = useState<Company | null>(null);
@@ -86,6 +120,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const signInWithEmail = async (email: string, password: string) => {
+    // Check if it's a test user
+    if (email === TEST_USERS.admin.email && password === TEST_USERS.admin.password) {
+      // Simulate admin login
+      const mockUser = {
+        uid: 'admin-test-id',
+        email: TEST_USERS.admin.email,
+        displayName: 'SFY Admin'
+      } as User;
+      
+      setUser(mockUser);
+      setCompany(TEST_USERS.admin.company);
+      setIsAdmin(true);
+      setLoading(false);
+      return;
+    }
+    
+    if (email === TEST_USERS.user.email && password === TEST_USERS.user.password) {
+      // Simulate user login
+      const mockUser = {
+        uid: 'user-test-id',
+        email: TEST_USERS.user.email,
+        displayName: 'Piano Keys'
+      } as User;
+      
+      setUser(mockUser);
+      setCompany(TEST_USERS.user.company);
+      setIsAdmin(false);
+      setLoading(false);
+      return;
+    }
+    
+    // Regular Firebase authentication
     await signInWithEmailAndPassword(auth, email, password);
   };
 
