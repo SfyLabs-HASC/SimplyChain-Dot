@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../src/contexts/AuthContext';
 import { X, Plus, FileText, Calendar, MapPin, Hash, Loader2, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
-import sha256 from 'js-sha256';
+import sha256 from 'js-sha256'; // SHA256 hashing for document verification
 
 interface Step {
   nome: string;
