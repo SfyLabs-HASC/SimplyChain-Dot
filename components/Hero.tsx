@@ -4,7 +4,7 @@ import { PlayIcon } from './icons/PlayIcon';
 import { GitHubIcon } from './icons/GitHubIcon';
 import VideoModal from './VideoModal';
 import AuthButton from './AuthButton';
-import { useActiveAccount } from 'thirdweb/react';
+import { useAuth } from '../src/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const BlockchainBlock: React.FC<{ index: number; hash: string; prevHash: string }> = ({ index, hash, prevHash }) => (
@@ -19,22 +19,19 @@ const BlockchainBlock: React.FC<{ index: number; hash: string; prevHash: string 
 
 // Componente personalizzato per il tasto "Vai al Servizio"
 const VaiAlServizioButton: React.FC = () => {
-    const account = useActiveAccount();
+    const { user } = useAuth();
     const navigate = useNavigate();
     const authButtonRef = useRef<HTMLDivElement>(null);
     
     const handleClick = () => {
-        if (account?.address) {
+        if (user) {
             // Se loggato, vai alla dashboard
-            console.log('🚀 Going to dashboard, account:', account?.address);
+            console.log('🚀 Going to dashboard, user:', user.email);
             navigate('/dashboard');
         } else {
-            // Se non loggato, clicca l'AuthButton nascosto
-            console.log('🔐 Triggering login modal');
-            const button = authButtonRef.current?.querySelector('button');
-            if (button) {
-                button.click();
-            }
+            // Se non loggato, vai al login
+            console.log('🔐 Redirecting to login');
+            navigate('/login');
         }
     };
     
@@ -62,17 +59,17 @@ const VaiAlServizioButton: React.FC = () => {
 
 const Hero: React.FC = () => {
     const [openVideo, setOpenVideo] = useState(false);
-    const account = useActiveAccount();
+    const { user } = useAuth();
     const navigate = useNavigate();
-    const initialHasAccount = useRef<boolean>(!!account?.address);
+    const initialHasUser = useRef<boolean>(!!user);
 
-    // Redirect to dashboard only on fresh connection from home (not if already logged in on load)
+    // Redirect to dashboard only on fresh login from home (not if already logged in on load)
     useEffect(() => {
-        if (!initialHasAccount.current && account?.address) {
-            initialHasAccount.current = true;
+        if (!initialHasUser.current && user) {
+            initialHasUser.current = true;
             navigate('/dashboard');
         }
-    }, [account?.address, navigate]);
+    }, [user, navigate]);
     return (
         <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-blue-50">
             {/* Background Elements */}

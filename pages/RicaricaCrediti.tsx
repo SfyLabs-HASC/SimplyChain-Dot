@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useActiveAccount } from 'thirdweb/react';
+import { useAuth } from '../src/contexts/AuthContext';
 import AuthButton from '../components/AuthButton';
 import { loadStripe } from '@stripe/stripe-js';
 
@@ -75,8 +75,8 @@ const creditPackages: CreditPackage[] = [
 ];
 
 const RicaricaCrediti: React.FC = () => {
-  const account = useActiveAccount();
-  const walletAddress = account?.address?.toLowerCase() || '';
+  const { user } = useAuth();
+  const userEmail = user?.email || '';
 
   const [selectedPackage, setSelectedPackage] = useState<CreditPackage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -107,7 +107,7 @@ const RicaricaCrediti: React.FC = () => {
   }, []);
 
 
-  const storageKey = useMemo(() => walletAddress ? `billing_info_${walletAddress}` : '', [walletAddress]);
+  const storageKey = useMemo(() => userEmail ? `billing_info_${userEmail}` : '', [userEmail]);
 
   useEffect(() => {
     if (!storageKey) return;
@@ -132,7 +132,7 @@ const RicaricaCrediti: React.FC = () => {
     }
 
     // Require login before proceeding
-    if (!walletAddress) {
+    if (!userEmail) {
       setSelectedPackage(pkg);
       setShowAuthPrompt(true);
       return;
@@ -144,7 +144,7 @@ const RicaricaCrediti: React.FC = () => {
 
   const handlePayment = async () => {
     if (!selectedPackage) return;
-    if (!walletAddress) {
+    if (!userEmail) {
       setShowAuthPrompt(true);
       return;
     }
@@ -160,7 +160,7 @@ const RicaricaCrediti: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // Save billing info per wallet so we can prefill next time
+      // Save billing info per user so we can prefill next time
       if (storageKey) {
         localStorage.setItem(storageKey, JSON.stringify(billingInfo));
       }
@@ -183,7 +183,7 @@ const RicaricaCrediti: React.FC = () => {
           credits: selectedPackage.credits,
           amount: selectedPackage.totalPrice,
           billingInfo,
-          walletAddress,
+          userEmail,
         }),
       });
 
@@ -281,11 +281,11 @@ const RicaricaCrediti: React.FC = () => {
 
   // If user connects from the auth prompt, close it and open the payment modal
   useEffect(() => {
-    if (walletAddress && showAuthPrompt && selectedPackage) {
+    if (userEmail && showAuthPrompt && selectedPackage) {
       setShowAuthPrompt(false);
       setShowPaymentForm(true);
     }
-  }, [walletAddress, showAuthPrompt, selectedPackage]);
+  }, [userEmail, showAuthPrompt, selectedPackage]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -469,7 +469,7 @@ const RicaricaCrediti: React.FC = () => {
                 </div>
 
                        {/* Previous Info Summary (if exists and not editing) */}
-                       {walletAddress && !isEditingBilling && (
+                       {userEmail && !isEditingBilling && (
                          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
                            <div className="flex items-center justify-between mb-2">
                              <h4 className="font-semibold text-slate-900">Dati salvati</h4>
