@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ExternalLink, CheckCircle, AlertCircle, Copy, Hash, Calendar, Block } from 'lucide-react';
+import { X, ExternalLink, CheckCircle, AlertCircle, Copy, Hash, Calendar, Square } from 'lucide-react';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -76,7 +76,7 @@ const TransactionModal: React.FC<TransactionModalProps> = ({ isOpen, onClose, tr
 
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center">
-                    <Block className="h-5 w-5 text-gray-400 mr-2" />
+                    <Square className="h-5 w-5 text-gray-400 mr-2" />
                     <span className="text-sm font-medium text-gray-700">Numero Blocco</span>
                   </div>
                   <span className="text-sm text-gray-900 font-mono">
